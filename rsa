@@ -1,21 +1,81 @@
-#!/usr/bin/python3
-"""the code williiiiiii find these two primes p and q of given n, n = p x q"""
-import sys
-from math import ceil, sqrt
+# hree is a Python scriptfactors large RSA numbers using the trial division method
 
-with open(sys.argv[1], "r") as fp:
-    n = int(fp.readline())
-    # check if value is even
-    if n % 2 == 0:
-        print("{}={}*{}".format(n, int(n / 2), 2))
-    # value is odd number
+
+import sys
+import time
+from math import sqrt, ceil
+
+
+# this Define a function to check if a number is prime
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(sqrt(n)) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+
+# does Define a func to factor single RSA number using the trial division method
+def factor_rsa_number(n):
+    # Initialize an empty list to store the prime factors of n
+    factors = []
+    # does Check if 2 is a factor of n
+    while n % 2 == 0:
+        factors.append(2)
+        n //= 2
+    # does Check for odd prime factors up to sqrt(n)
+    i = 3
+    while i <= sqrt(n):
+        if n % i == 0:
+            factors.append(i)
+            n //= i
+        else:
+            i += 2
+    # here If n is still greater than 2, it must be prime
+    if n > 2:
+        factors.append(n)
+    # here If only one factor is found, return it as p and n//p as q
+    if len(factors) == 1:
+        p = factors[0]
+        q = n // p
+        return (p, q)
+    # here If more than one factor is got,recursively factor each factor until all are prime
     else:
-        a = int(ceil(sqrt(n)))
-        while (True):
-            b1 = a * a - n
-            b = int(sqrt(b1))
-            if(b * b == b1):
-                break
+        pq = []
+        for factor in factors:
+            if is_prime(factor):
+                pq.append(factor)
             else:
-                a += 1
-        print("{}={}*{}".format(n, a + b, a - b))
+                p, q = factor_rsa_number(factor)
+                pq.append(p)
+                pq.append(q)
+        return tuple(pq)
+
+
+# doesRead the input file name from the command line arguments
+input_file = sys.argv[1]
+
+
+# does Read the RSA numbers from the input file
+with open(input_file, 'r') as f:
+    rsa_numbers = [int(line.strip()) for line in f.readlines()]
+
+
+# doesStart a timer to measure the execution time
+start_time = time.time()
+
+
+# does Factor each RSA number in the file using the trial division method
+for n in rsa_numbers:
+    p, q = factor_rsa_number(n)
+    print(f"{n}={q}*{p}")
+
+
+# doesStop the timer and calculate the execution time
+end_time = time.time()
+exec_time = end_time - start_time
+
+
+# doesPrint the execution time in seconds
+print("Total execution time: ", exec_time, " seconds")
