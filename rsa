@@ -1,81 +1,70 @@
-# hree is a Python scriptfactors large RSA numbers using the trial division method
-
-
+#!/usr/bin/python3
 import sys
-import time
-from math import sqrt, ceil
+import math
 
+"""
+Function to find the greatest common divisor.
+Uses the Euclidean algorithm.
+"""
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
 
-# this Define a function to check if a number is prime
-def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, int(sqrt(n)) + 1):
-        if n % i == 0:
-            return False
-    return True
+"""
+Pollard's Rho algorithm to find factors.
+"""
+def pollard_rho(n):
+    if n % 2 == 0:
+        return 2
 
+    x = 2
+    y = 2
+    d = 1
 
-# does Define a func to factor single RSA number using the trial division method
-def factor_rsa_number(n):
-    # Initialize an empty list to store the prime factors of n
+    f = lambda x: (x ** 2 + 1) % n
+
+    while d == 1:
+        x = f(x)
+        y = f(f(y))
+        d = gcd(abs(x - y), n)
+
+    return d
+
+"""
+Function to factorize the number into its prime factors.
+"""
+def factorize_prime(n):
     factors = []
-    # does Check if 2 is a factor of n
-    while n % 2 == 0:
-        factors.append(2)
-        n //= 2
-    # does Check for odd prime factors up to sqrt(n)
-    i = 3
-    while i <= sqrt(n):
-        if n % i == 0:
-            factors.append(i)
-            n //= i
-        else:
-            i += 2
-    # here If n is still greater than 2, it must be prime
-    if n > 2:
-        factors.append(n)
-    # here If only one factor is found, return it as p and n//p as q
-    if len(factors) == 1:
-        p = factors[0]
-        q = n // p
-        return (p, q)
-    # here If more than one factor is got,recursively factor each factor until all are prime
+
+    while n > 1:
+        if n == 2 or n == 3:
+            factors.append(n)
+            break
+
+        factor = pollard_rho(n)
+        while n % factor == 0:
+            factors.append(factor)
+            n //= factor
+
+    return factors
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python rsa_factors.py <file>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
+
+    with open(file_path, "r") as file:
+        num = int(file.read())
+
+    # Factorize the number into its prime factors
+    prime_factors = factorize_prime(num)
+    # Check if the prime factors were found and print the result
+    if len(prime_factors) == 2:
+        p, q = prime_factors
+        print(f"{num}={p}*{q}")
     else:
-        pq = []
-        for factor in factors:
-            if is_prime(factor):
-                pq.append(factor)
-            else:
-                p, q = factor_rsa_number(factor)
-                pq.append(p)
-                pq.append(q)
-        return tuple(pq)
+        print("Prime factors not found within the time limit.")
 
-
-# doesRead the input file name from the command line arguments
-input_file = sys.argv[1]
-
-
-# does Read the RSA numbers from the input file
-with open(input_file, 'r') as f:
-    rsa_numbers = [int(line.strip()) for line in f.readlines()]
-
-
-# doesStart a timer to measure the execution time
-start_time = time.time()
-
-
-# does Factor each RSA number in the file using the trial division method
-for n in rsa_numbers:
-    p, q = factor_rsa_number(n)
-    print(f"{n}={q}*{p}")
-
-
-# doesStop the timer and calculate the execution time
-end_time = time.time()
-exec_time = end_time - start_time
-
-
-# doesPrint the execution time in seconds
-print("Total execution time: ", exec_time, " seconds")
